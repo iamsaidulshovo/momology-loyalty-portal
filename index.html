@@ -281,7 +281,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { 
-    initializeFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot 
+    initializeFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -296,19 +296,13 @@
 
   const app = initializeApp(firebaseConfig);
 
-  // ব্রাউজার নেটওয়ার্ক ব্লক বা অফলাইন এরর এড়াতে Long Polling মোড
+  // ব্রাউজার নেটওয়ার্ক ড্রপ ও অফলাইন এরর এড়াতে Long Polling কনফিগ
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
     useFetchStreams: false
   });
 
   let currentPhone = localStorage.getItem('mm_active_session_phone') || null;
-
-  const DEFAULT_REWARDS = [
-    { id: '1', title: 'স্পাইসি নাগা ডিপ', desc: 'যেকোনো মোমোর সাথে এক্সট্রা স্পাইসি সস', cost: 40 },
-    { id: '2', title: 'স্টিম চিকেন মোমো (৫ পিস)', desc: 'সিগনেচার স্টিম চিকেন মোমো', cost: 100 },
-    { id: '3', title: 'Single Smash Beef Burger (90g)', desc: 'জুসি ক্রিস্পি স্ম্যাশ বিফ বার্গার', cost: 200 }
-  ];
 
   window.switchPortal = function(tab) {
     const custView = document.getElementById('customer-view');
@@ -428,6 +422,73 @@
     });
   }
 
+  // রিয়েল-টাইম ডাটাবেজ থেকে রিওয়ার্ড লোড
+  function listenToRewards() {
+    onSnapshot(collection(db, "rewards"), (snapshot) => {
+      const container = document.getElementById('rewards-container');
+      if (snapshot.empty) {
+        container.innerHTML = '<p class="text-xs text-stone-400">বর্তমানে কোনো রিওয়ার্ড অফার নেই।</p>';
+        return;
+      }
+
+      let html = '';
+      snapshot.forEach((docSnap) => {
+        const r = docSnap.data();
+        html += `
+          <div class="bg-white p-4 rounded-xl border border-stone-200 flex justify-between items-center shadow-sm">
+            <div>
+              <h5 class="font-bold text-sm text-stone-800 m-0">${r.title}</h5>
+              <p class="text-xs text-stone-500 m-0">${r.desc}</p>
+              <span class="text-xs font-extrabold text-brand mt-1 inline-block">${r.cost} পয়েন্ট</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="redeemReward('${r.title}', ${r.cost})" class="bg-orange-50 text-brand border border-orange-200 hover:bg-brand hover:text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">
+                রিডিম
+              </button>
+              <button onclick="deleteRewardItem('${docSnap.id}')" class="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded bg-red-50 font-semibold cursor-pointer">
+                মুছুন
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    });
+  }
+
+  window.saveRewardItem = async function() {
+    const title = document.getElementById('adm-rew-title').value.trim();
+    const desc = document.getElementById('adm-rew-desc').value.trim();
+    const cost = parseInt(document.getElementById('adm-rew-cost').value);
+
+    if (!title || isNaN(cost) || cost <= 0) return alert('সঠিক নাম ও পয়েন্ট লিখুন!');
+
+    try {
+      await setDoc(doc(collection(db, "rewards")), {
+        title: title,
+        desc: desc || '',
+        cost: cost,
+        createdAt: new Date().toISOString()
+      });
+      alert('রিওয়ার্ড সফলভাবে যুক্ত হয়েছে!');
+      document.getElementById('adm-rew-title').value = '';
+      document.getElementById('adm-rew-desc').value = '';
+      document.getElementById('adm-rew-cost').value = '';
+    } catch (e) {
+      alert('রিওয়ার্ড সেভ করতে সমস্যা হয়েছে!');
+    }
+  };
+
+  window.deleteRewardItem = async function(id) {
+    if (!confirm('এই রিওয়ার্ডটি মুছে ফেলতে চান?')) return;
+    try {
+      await deleteDoc(doc(db, "rewards", id));
+      alert('রিওয়ার্ড মুছে ফেলা হয়েছে!');
+    } catch (e) {
+      alert('ডিলিট ব্যর্থ হয়েছে!');
+    }
+  };
+
   window.claimOrderPoints = async function() {
     if (!currentPhone) {
       alert('পয়েন্ট ক্লেইম করতে প্রথমে লগইন করুন।');
@@ -471,7 +532,6 @@
       input.value = '';
     } catch (e) {
       alert("ত্রুটি হয়েছে! পুনরায় চেষ্টা করুন।");
-      console.error(e);
     }
   };
 
@@ -508,7 +568,6 @@
       alert(`রিওয়ার্ড সফলভাবে রিডিম হয়েছে!\nকোড: ${code}\nFoodpanda অর্ডারের নোটে আপনার User ID (${data.userId}) লিখে দিন।`);
     } catch (e) {
       alert("রিডিম ব্যর্থ হয়েছে।");
-      console.error(e);
     }
   };
 
@@ -652,18 +711,8 @@
     }
   };
 
-  document.getElementById('rewards-container').innerHTML = DEFAULT_REWARDS.map(r => `
-    <div class="bg-white p-4 rounded-xl border border-stone-200 flex justify-between items-center shadow-sm">
-      <div>
-        <h5 class="font-bold text-sm text-stone-800 m-0">${r.title}</h5>
-        <p class="text-xs text-stone-500 m-0">${r.desc}</p>
-        <span class="text-xs font-extrabold text-brand mt-1 inline-block">${r.cost} পয়েন্ট</span>
-      </div>
-      <button onclick="redeemReward('${r.title}', ${r.cost})" class="bg-orange-50 text-brand border border-orange-200 hover:bg-brand hover:text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">
-        রিডিম
-      </button>
-    </div>
-  `).join('');
+  // লাইভ রিওয়ার্ড লোড ইনিশিয়ালাইজ
+  listenToRewards();
 
   if (currentPhone) {
     listenToUserData(currentPhone);
