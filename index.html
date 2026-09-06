@@ -431,37 +431,55 @@
     });
   }
 
-  // রিয়েল-টাইম ডাটাবেজ থেকে রিওয়ার্ড লোড
+ // রিয়েল-টাইম ডাটাবেজ থেকে রিওয়ার্ড লোড
   function listenToRewards() {
     onSnapshot(collection(db, "rewards"), (snapshot) => {
       const container = document.getElementById('rewards-container');
+      const admContainer = document.getElementById('admin-rewards-list');
+
       if (snapshot.empty) {
         container.innerHTML = '<p class="text-xs text-stone-400">বর্তমানে কোনো রিওয়ার্ড অফার নেই।</p>';
+        if (admContainer) admContainer.innerHTML = '<p class="text-xs text-stone-400">কোনো সক্রিয় রিওয়ার্ড নেই।</p>';
         return;
       }
 
-      let html = '';
+      let custHtml = '';
+      let admHtml = '';
+
       snapshot.forEach((docSnap) => {
         const r = docSnap.data();
-        html += `
+        const id = docSnap.id;
+
+        // কাস্টমার প্যানেল: শুধু রিডিম বাটন
+        custHtml += `
           <div class="bg-white p-4 rounded-xl border border-stone-200 flex justify-between items-center shadow-sm">
             <div>
               <h5 class="font-bold text-sm text-stone-800 m-0">${r.title}</h5>
               <p class="text-xs text-stone-500 m-0">${r.desc}</p>
               <span class="text-xs font-extrabold text-brand mt-1 inline-block">${r.cost} পয়েন্ট</span>
             </div>
-            <div class="flex items-center space-x-2">
-              <button onclick="redeemReward('${r.title}', ${r.cost})" class="bg-orange-50 text-brand border border-orange-200 hover:bg-brand hover:text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">
-                রিডিম
-              </button>
-              <button onclick="deleteRewardItem('${docSnap.id}')" class="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded bg-red-50 font-semibold cursor-pointer">
-                মুছুন
-              </button>
+            <button onclick="redeemReward('${r.title}', ${r.cost})" class="bg-orange-50 text-brand border border-orange-200 hover:bg-brand hover:text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">
+              রিডিম
+            </button>
+          </div>
+        `;
+
+        // অ্যাডমিন প্যানেল: ডিলিট বাটনসহ তালিকা
+        admHtml += `
+          <div class="flex justify-between items-center p-2.5 bg-stone-50 border border-stone-200 rounded-lg text-xs">
+            <div>
+              <b class="text-stone-800">${r.title}</b> (${r.cost} পয়েন্ট)
+              <p class="text-[11px] text-stone-500 m-0">${r.desc}</p>
             </div>
+            <button onclick="deleteRewardItem('${id}')" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-200 text-xs px-2.5 py-1 rounded font-semibold transition cursor-pointer">
+              মুছুন
+            </button>
           </div>
         `;
       });
-      container.innerHTML = html;
+
+      container.innerHTML = custHtml;
+      if (admContainer) admContainer.innerHTML = admHtml;
     });
   }
 
@@ -470,7 +488,7 @@
     const desc = document.getElementById('adm-rew-desc').value.trim();
     const cost = parseInt(document.getElementById('adm-rew-cost').value);
 
-    if (!title || isNaN(cost) || cost <= 0) return alert('সঠিক নাম ও পয়েন্ট লিখুন!');
+    if (!title || isNaN(cost) || cost <= 0) return alert('সঠিক নাম ও পয়েন্ট লিখুন!');
 
     try {
       await setDoc(doc(collection(db, "rewards")), {
@@ -484,7 +502,7 @@
       document.getElementById('adm-rew-desc').value = '';
       document.getElementById('adm-rew-cost').value = '';
     } catch (e) {
-      alert('রিওয়ার্ড সেভ করতে সমস্যা হয়েছে!');
+      alert('রিওয়ার্ড সেভ করতে সমস্যা হয়েছে!');
     }
   };
 
@@ -720,7 +738,7 @@
     }
   };
 
-  // লাইভ রিওয়ার্ড লোড ইনিশিয়ালাইজ
+  // লাইভ রিওয়ার্ড লোড ইনিশিয়ালাইজ
   listenToRewards();
 
   if (currentPhone) {
