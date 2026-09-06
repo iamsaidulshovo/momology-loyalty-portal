@@ -261,21 +261,26 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { 
-    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot 
+    initializeFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // Firebase কনফিগারেশন
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyD40JCimr2YbXOMDXw_87abCPYG0aS5bOQ",
+    authDomain: "momology-loyalty.firebaseapp.com",
+    projectId: "momology-loyalty",
+    storageBucket: "momology-loyalty.firebasestorage.app",
+    messagingSenderId: "535265624407",
+    appId: "1:535265624407:web:92ff14ce74412d0418fe12", 
+    measurementId: "G-GVTCGV603K"
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+
+  // ব্রাউজার নেটওয়ার্ক ব্লক বা অফলাইন এরর এড়াতে Long Polling মোড
+  const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    useFetchStreams: false
+  });
 
   let currentPhone = localStorage.getItem('mm_active_session_phone') || null;
 
@@ -487,7 +492,6 @@
     }
   };
 
-  // অ্যাডমিন কন্ট্রোল
   window.unlockAdmin = function() {
     const pass = document.getElementById('admin-pass').value;
     if (pass === 'momo2026') {
@@ -528,7 +532,6 @@
   };
 
   async function loadAdminData() {
-    // লিড তালিকা লোড
     const usersSnap = await getDocs(collection(db, "customers"));
     const leadsTbody = document.getElementById('leads-table-body');
     let leadsHtml = '';
@@ -549,7 +552,6 @@
     document.getElementById('total-leads-count').innerText = `${count} জন`;
     leadsTbody.innerHTML = leadsHtml || '<tr><td colspan="4" class="p-3 text-center text-stone-400">কোনো ডাটা নেই</td></tr>';
 
-    // অর্ডার তালিকা লোড
     const ordersSnap = await getDocs(collection(db, "orders"));
     const ordersTbody = document.getElementById('orders-table-body');
     let ordersHtml = '';
@@ -630,7 +632,6 @@
     }
   };
 
-  // রেন্ডার রিওয়ার্ড বাটন
   document.getElementById('rewards-container').innerHTML = DEFAULT_REWARDS.map(r => `
     <div class="bg-white p-4 rounded-xl border border-stone-200 flex justify-between items-center shadow-sm">
       <div>
@@ -648,6 +649,5 @@
     listenToUserData(currentPhone);
   }
 </script>
-
 </body>
 </html>
