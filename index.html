@@ -745,5 +745,61 @@
     listenToUserData(currentPhone);
   }
 </script>
+  <!-- Floating Video Tutorial Button -->
+<button onclick="openTutorialModal()" class="fixed bottom-5 right-5 z-40 bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs px-4 py-3 rounded-full shadow-2xl border-2 border-orange-500/40 flex items-center space-x-2 transition-transform hover:scale-105 cursor-pointer">
+  <span class="text-base animate-pulse">🎬</span>
+  <span>কীভাবে কাজ করে?</span>
+</button>
+
+<!-- Tutorial Video Modal -->
+<div id="tutorial-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+  <div class="relative w-full max-w-sm bg-stone-950 rounded-3xl border border-stone-800 shadow-2xl overflow-hidden p-6 flex flex-col justify-between" style="min-height: 480px;">
+    
+    <!-- Close Button -->
+    <button onclick="closeTutorialModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white text-xl cursor-pointer z-20">✕</button>
+
+    <!-- Progress Bar -->
+    <div class="w-full bg-stone-800 h-1.5 rounded-full overflow-hidden mb-3">
+      <div id="tut-progress-bar" class="bg-orange-500 h-full w-0 transition-all duration-300"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center">
+      <span class="text-[10px] tracking-widest text-orange-400 font-bold uppercase bg-orange-950/60 border border-orange-800/40 px-3 py-0.5 rounded-full">
+        ভিডিও গাইড
+      </span>
+      <h3 class="text-base font-extrabold text-white mt-2">MOMOLOGY CLUB</h3>
+    </div>
+
+    <!-- Animated Slide Area -->
+    <div class="my-auto flex flex-col items-center text-center space-y-3 py-4">
+      <div id="tut-icon" class="text-5xl transition-transform">🧾</div>
+      <div class="space-y-1">
+        <h4 id="tut-title" class="text-lg font-black text-white m-0">১. স্লিপ থেকে কোড দেখুন</h4>
+        <p id="tut-desc" class="text-xs text-stone-400 px-3 leading-relaxed m-0">
+          আপনার পার্সেলের থার্মাল স্লিপে থাকা ৪-৬ ডিজিটের ক্লেইম কোডটি লক্ষ্য করুন।
+        </p>
+      </div>
+
+      <!-- Mock Graphic Box -->
+      <div id="tut-mockup" class="w-full bg-stone-900 border border-stone-800 rounded-xl p-3 text-left">
+        <div class="text-[11px] font-mono text-orange-400 font-bold">SLIP CODE: #8942</div>
+        <div class="text-[10px] text-stone-500">Order Total: ৳450</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="space-y-2">
+      <div class="flex justify-between items-center text-[11px] text-stone-500 px-1 font-bold">
+        <span id="tut-step-indicator">ধাপ ১ / ৪</span>
+        <button onclick="restartTutorial()" class="text-orange-400 hover:underline cursor-pointer">আবার দেখুন ↻</button>
+      </div>
+      <button id="tut-play-btn" onclick="toggleTutorialPlay()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg cursor-pointer">
+        পজ করুন ⏸
+      </button>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
