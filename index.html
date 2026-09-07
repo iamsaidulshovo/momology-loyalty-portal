@@ -744,6 +744,102 @@
   if (currentPhone) {
     listenToUserData(currentPhone);
   }
+  const tutSteps = [
+    {
+      icon: "🧾",
+      title: "১. স্লিপ থেকে কোড দেখুন",
+      desc: "আপনার পার্সেলের থার্মাল স্লিপে থাকা ৪ ডিজিটের কোডটি দেখুন।",
+      mockup: '<div class="text-[11px] font-mono text-orange-400 font-bold">MOMOLOGY SLIP: #8942</div><div class="text-[10px] text-stone-400 mt-1">প্রতি ১০০ টাকায় পাচ্ছেন ১০ পয়েন্ট!</div>',
+      duration: 4500
+    },
+    {
+      icon: "📱",
+      title: "২. লগইন ও রেজিস্ট্রেশন",
+      desc: "নাম ও মোবাইল নম্বর দিয়ে লগইন করলেই পাচ্ছেন ১০ পয়েন্ট বোনাস!",
+      mockup: '<div class="bg-stone-800 p-2 rounded text-[11px] text-stone-300 font-mono">📱 017XXXXXXXX <span class="text-emerald-400 float-right">লগইন ✓</span></div>',
+      duration: 5000
+    },
+    {
+      icon: "🎁",
+      title: "৩. কোড দিয়ে পয়েন্ট ক্লেইম",
+      desc: "স্লিপের কোডটি লিখে ক্লেইম করুন, সাথে সাথে পয়েন্ট ব্যালেন্সে যুক্ত হবে।",
+      mockup: '<div class="flex items-center justify-between bg-stone-800 p-2 rounded text-[11px]"><span class="font-mono text-orange-400">#8942</span><span class="text-emerald-400 font-bold">+৪৫ পয়েন্ট</span></div>',
+      duration: 4500
+    },
+    {
+      icon: "🛵",
+      title: "৪. ফুডপ্যান্ডায় রিওয়ার্ড নিন",
+      desc: "পয়েন্ট দিয়ে রিওয়ার্ড সিলেক্ট করে ফুডপ্যান্ডা অর্ডারের নোটে আপনার User ID দিন!",
+      mockup: '<div class="bg-amber-950/40 border border-amber-800/40 p-2 rounded text-[10px] text-amber-200">Note: MOM-8942 (ফ্রি ক্রিস্পি ফ্রাইস)</div>',
+      duration: 5500
+    }
+  ];
+
+  let tutCurrentStep = 0;
+  let tutIsPlaying = false;
+  let tutTimer = null;
+
+  function updateTutorialUI() {
+    const s = tutSteps[tutCurrentStep];
+    document.getElementById('tut-icon').innerText = s.icon;
+    document.getElementById('tut-title').innerText = s.title;
+    document.getElementById('tut-desc').innerText = s.desc;
+    document.getElementById('tut-mockup').innerHTML = s.mockup;
+    document.getElementById('tut-step-indicator').innerText = `ধাপ ${tutCurrentStep + 1} / ${tutSteps.length}`;
+
+    const bar = document.getElementById('tut-progress-bar');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    setTimeout(() => {
+      bar.style.transition = `width ${s.duration}ms linear`;
+      bar.style.width = '100%';
+    }, 50);
+  }
+
+  function nextTutorialStep() {
+    if (tutCurrentStep < tutSteps.length - 1) {
+      tutCurrentStep++;
+      updateTutorialUI();
+      tutTimer = setTimeout(nextTutorialStep, tutSteps[tutCurrentStep].duration);
+    } else {
+      tutIsPlaying = false;
+      document.getElementById('tut-play-btn').innerText = "আবার চালু করুন ↻";
+    }
+  }
+
+  window.openTutorialModal = function() {
+    document.getElementById('tutorial-modal').classList.remove('hidden');
+    restartTutorial();
+  };
+
+  window.closeTutorialModal = function() {
+    clearTimeout(tutTimer);
+    tutIsPlaying = false;
+    document.getElementById('tutorial-modal').classList.add('hidden');
+  };
+
+  window.toggleTutorialPlay = function() {
+    if (tutIsPlaying) {
+      clearTimeout(tutTimer);
+      tutIsPlaying = false;
+      document.getElementById('tut-play-btn').innerText = "চালু রাখুন ▶";
+    } else {
+      if (tutCurrentStep === tutSteps.length - 1) tutCurrentStep = 0;
+      tutIsPlaying = true;
+      document.getElementById('tut-play-btn').innerText = "পজ করুন ⏸";
+      updateTutorialUI();
+      tutTimer = setTimeout(nextTutorialStep, tutSteps[tutCurrentStep].duration);
+    }
+  };
+
+  window.restartTutorial = function() {
+    clearTimeout(tutTimer);
+    tutCurrentStep = 0;
+    tutIsPlaying = true;
+    document.getElementById('tut-play-btn').innerText = "পজ করুন ⏸";
+    updateTutorialUI();
+    tutTimer = setTimeout(nextTutorialStep, tutSteps[tutCurrentStep].duration);
+  };
 </script>
   <!-- Floating Video Tutorial Button -->
 <button onclick="openTutorialModal()" class="fixed bottom-5 right-5 z-40 bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs px-4 py-3 rounded-full shadow-2xl border-2 border-orange-500/40 flex items-center space-x-2 transition-transform hover:scale-105 cursor-pointer">
